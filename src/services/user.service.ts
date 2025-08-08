@@ -1,6 +1,7 @@
-import { UserRepository } from "../repositories/user.repository";
+import { prisma } from "../config/db";
 
 async function findAll() {
-  return await UserRepository.findAll();
+  return await prisma.user.findMany();
 }
+
 export const UserService = { findAll };
