@@ -14,9 +14,120 @@ datasource db {
 }
 
 model User {
-  id      Int      @id @default(autoincrement())
-  email   String   @unique
-  name    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               Int               @id @default(autoincrement())
+  email            String            @unique
+  name             String
+  role             UserRole
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  subjectOfferings SubjectOffering[]
+}
+
+enum UserRole {
+  ADMIN
+  STUDENT
+  INSTRUCTOR
+}
+
+model Program {
+  id                 Int          @id @default(autoincrement())
+  name               String
+  department         String
+  accreditationLevel String?
+  type               ProgramType
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  prospectuses       Prospectus[]
+  sections           Section[]
+}
+
+enum ProgramType {
+  GRADUATE
+  UNDERGRADUATE
+}
+
+model Section {
+  id               Int               @id @default(autoincrement())
+  programId        Int
+  name             String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  subjectOfferings SubjectOffering[]
+  program          Program           @relation(references: [id], fields: [programId])
+}
+
+model Prospectus {
+  id        Int       @id @default(autoincrement())
+  programId Int
+  startYear Int
+  endYear   Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  subjects  Subject[]
+  program   Program   @relation(references: [id], fields: [programId])
+
+  @@unique([startYear, endYear])
+}
+
+model Subject {
+  id               Int               @id @default(autoincrement())
+  prospectusId     Int
+  name             String            @unique
+  description      String
+  year             Int
+  semester         Int
+  units            Int
+  lecUnits         Int
+  labUnits         Int?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  subjectOfferings SubjectOffering[]
+  prospectus       Prospectus        @relation(references: [id], fields: [prospectusId])
+}
+
+model SubjectOffering {
+  id             Int             @id @default(autoincrement())
+  sectionId      Int
+  subjectId      Int
+  instructorId   Int
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  section        Section         @relation(references: [id], fields: [sectionId])
+  subject        Subject         @relation(references: [id], fields: [subjectId])
+  instructor     User            @relation(references: [id], fields: [instructorId])
+  classSchedules ClassSchedule[]
+}
+
+model Room {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  type           RoomType
+  capacity       Int
+  status         RoomStatus
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  classSchedules ClassSchedule[]
+}
+
+enum RoomType {
+  LECTURE
+  LABORATORY
+}
+
+enum RoomStatus {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+model ClassSchedule {
+  id                Int             @id @default(autoincrement())
+  subjectOfferingId Int
+  roomId            Int
+  dayOfWeek         Int // 1–7
+  startMins         Int // since midnight e.g., 7:00 AM = 420
+  endMins           Int // since midnight e.g., 10:00 AM = 600
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  subjectOffering   SubjectOffering @relation(references: [id], fields: [subjectOfferingId])
+  room              Room            @relation(references: [id], fields: [roomId])
 }
